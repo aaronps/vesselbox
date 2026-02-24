@@ -48,8 +48,9 @@ while [ $# -ge 1 ]; do case $1 in
         ;;
 
     *)
-        echo arg is $1
-        shift
+        echo "Unknown argument: $1"
+        exit 1
+        
 esac done
 
 # initial tests to ensure config and arguments are ok
