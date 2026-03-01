@@ -22,7 +22,7 @@ pre_checks() {
 
 prepare_volume() {
     cp /etc/hostname $VOLUME_DIR/etc/hostname
-    cp /etc/resolv.conf $VOLUME_DIR/etc/resolv.conf 
+    cp /etc/resolv.conf $VOLUME_DIR/etc/resolv.conf
 
     mount --make-shared $VOLUME_DIR
     mount -t tmpfs tmpfs $VOLUME_DIR/tmp

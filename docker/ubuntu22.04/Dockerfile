@@ -16,6 +16,8 @@ ARG REGISTRY="docker.io"
 
 FROM $REGISTRY/library/ubuntu:22.04
 
+ARG TARGETARCH TARGETVARIANT CACHE_ID=ubuntu22.04
+
 ARG UBUNTU_MIRROR TZ=UTC LANG=C.UTF8
 
 RUN test -n "$UBUNTU_MIRROR" && sed -Ei "s,(archive|security|ports)\.ubuntu\.com,${UBUNTU_MIRROR},g" /etc/apt/sources.list
@@ -23,16 +25,19 @@ RUN test -n "$UBUNTU_MIRROR" && sed -Ei "s,(archive|security|ports)\.ubuntu\.com
 ENV TZ=$TZ \
     LANG=$LANG
 
-RUN --mount=type=cache,target=/var/lib/apt,sharing=private \
-    --mount=type=cache,target=/var/cache/apt,sharing=private \
+RUN --mount=type=cache,target=/var/lib/apt/lists,sharing=locked,id=apt-lists-${CACHE_ID}-${TARGETARCH}${TARGETVARIANT} \
+    --mount=type=cache,target=/var/cache/apt,sharing=locked,id=apt-cache-${CACHE_ID}-${TARGETARCH}${TARGETVARIANT} \
     apt -y update \
  && apt -y upgrade \
  && echo y | unminimize
 
-RUN --mount=type=cache,target=/var/lib/apt,sharing=private \
-    --mount=type=cache,target=/var/cache/apt,sharing=private \
+RUN --mount=type=cache,target=/var/lib/apt/lists,sharing=locked,id=apt-lists-${CACHE_ID}-${TARGETARCH}${TARGETVARIANT} \
+    --mount=type=cache,target=/var/cache/apt,sharing=locked,id=apt-cache-${CACHE_ID}-${TARGETARCH}${TARGETVARIANT} \
     DEBIAN_FRONTEND=noninteractive apt install -y --no-install-recommends systemd dbus 
-
+    
 RUN systemctl set-default multi-user.target \
- && systemctl mask `systemctl list-unit-files '*mount' | awk '/mount/{print $1}'`
- 
+    && systemctl mask `systemctl list-unit-files '*mount' | awk '/mount/{print $1}'`
+    
+RUN --mount=type=cache,target=/var/lib/apt/lists,sharing=locked,id=apt-lists-${CACHE_ID}-${TARGETARCH}${TARGETVARIANT} \
+    --mount=type=cache,target=/var/cache/apt,sharing=locked,id=apt-cache-${CACHE_ID}-${TARGETARCH}${TARGETVARIANT} \
+    DEBIAN_FRONTEND=noninteractive apt install -y --no-install-recommends openssh-server
