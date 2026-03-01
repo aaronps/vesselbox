@@ -1,0 +1,90 @@
+name: vesselbox
+
+networks:
+  default:
+    ipam:
+      config:
+        - subnet: 10.0.0.0/24
+
+volumes:
+  ubuntu2204:
+  ubuntu2404:
+
+services:
+
+  init-ubuntu2204:
+    hostname: ubuntu2204
+    image: vesselbox/vesselbox
+
+    profiles:
+      - job
+
+    entrypoint: init-volume.sh
+
+    volumes:
+      - type: volume
+        source: ubuntu2204
+        target: /data
+      - type: bind
+        source: ../dist/ubuntu22.04.tar
+        target: /base.tar
+        read_only: true
+        bind:
+          create_host_path: false
+
+  ubuntu2204:
+    hostname: ubuntu2204
+    image: vesselbox/vesselbox
+
+    cap_add:
+      - SYS_ADMIN
+
+    # profiles:
+    #   - disabled
+
+    ports:
+      - 10023:22
+
+    volumes:
+      - type: volume
+        source: ubuntu2204
+        target: /data
+        
+  init-ubuntu2404:
+    hostname: ubuntu2404
+    image: vesselbox/vesselbox
+
+    profiles:
+      - job
+
+    entrypoint: init-volume.sh
+
+    volumes:
+      - type: volume
+        source: ubuntu2404
+        target: /data
+      - type: bind
+        source: ../dist/ubuntu24.04.tar
+        target: /base.tar
+        read_only: true
+        bind:
+          create_host_path: false
+
+  ubuntu2404:
+    hostname: ubuntu2404
+    image: vesselbox/vesselbox
+
+    cap_add:
+      - SYS_ADMIN
+
+    profiles:
+      - disabled
+
+    ports:
+      - 10022:22
+
+    volumes:
+      - type: volume
+        source: ubuntu2404
+        target: /data
+        
