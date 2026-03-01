@@ -54,10 +54,41 @@ while [ $# -ge 1 ]; do case $1 in
 esac done
 
 # initial tests to ensure config and arguments are ok
+pre_checks() {
+    test -z "$VOLUME_DIR" && { echo "volume dir cannot be empty"; exit 1; }
+    test -e "$VOLUME_DIR" || { echo "Volume $VOLUME_DIR does not exists"; exit 1; }
+    test -d "$VOLUME_DIR" || { echo "Volume $VOLUME_DIR is not a directory"; exit 1; }
+}
 
-test -z "$VOLUME_DIR" && { echo "volume dir cannot be empty"; exit 1; }
-test -e "$VOLUME_DIR" || { echo "Volume $VOLUME_DIR does not exists"; exit 1; }
-test -d "$VOLUME_DIR" || { echo "Volume $VOLUME_DIR is not a directory"; exit 1; }
+config_ssh() {
+    echo "Configuring ssh to allow root login"
+    mkdir -p $VOLUME_DIR/etc/ssh/sshd_config.d
+    echo "PermitRootLogin yes" > $VOLUME_DIR/etc/ssh/sshd_config.d/vesselbox.conf
+}
+
+setup_root_password() {
+    echo "Setting root password"
+    
+    PASS1=""
+    PASS2=""
+
+    while [ -z "$PASS1" ]; do
+        read -s -p "Enter root password: " PASS1
+        echo ""
+        test -n "$PASS1" || echo "Password cannot be empty"
+    done
+
+    while [ "$PASS1" != "$PASS2" ]; do
+        read -s -p "Verify root password: " PASS2
+        echo ""
+        test "$PASS1" == "$PASS2" || echo "Passwords are different, retry"
+    done
+
+    echo "root:$PASS1" | chpasswd -R $VOLUME_DIR || { echo "Root password update failed"; exit 1; }
+}
+
+pre_checks
+
 
 # more data collection
 
@@ -85,3 +116,6 @@ esac
 echo "Extracting data..."
 tar -xC $VOLUME_DIR -f $TAR_FILE
 echo "Extracting data... Done"
+
+config_ssh
+setup_root_password
