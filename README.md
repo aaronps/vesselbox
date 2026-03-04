@@ -73,7 +73,7 @@ You can see the example on the `compose/` directory. Each environment is compose
 
 ## Roadmap
 
-- [ ] Add debian environments
+- [ ] Add debian environments (13.3 done, do 12 too)
 - [ ] Add alma/rocky environments
 - [ ] Helm chart / raw manifests
 

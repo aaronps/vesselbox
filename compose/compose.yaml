@@ -7,6 +7,7 @@ networks:
         - subnet: 10.0.0.0/24
 
 volumes:
+  debian133:
   ubuntu2204:
   ubuntu2404:
 
@@ -86,5 +87,43 @@ services:
     volumes:
       - type: volume
         source: ubuntu2404
+        target: /data
+        
+  init-debian133:
+    hostname: debian133
+    image: vesselbox/vesselbox
+
+    profiles:
+      - job
+
+    entrypoint: init-volume.sh
+
+    volumes:
+      - type: volume
+        source: debian133
+        target: /data
+      - type: bind
+        source: ../dist/debian13.3.tar
+        target: /base.tar
+        read_only: true
+        bind:
+          create_host_path: false
+
+  debian133:
+    hostname: debian133
+    image: vesselbox/vesselbox
+
+    cap_add:
+      - SYS_ADMIN
+
+    # profiles:
+    #   - disabled
+
+    ports:
+      - 10024:22
+
+    volumes:
+      - type: volume
+        source: debian133
         target: /data
         
