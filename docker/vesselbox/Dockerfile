@@ -16,16 +16,23 @@ ARG REGISTRY="docker.io"
 
 FROM $REGISTRY/library/alpine:3.23.3
 
+ARG TARGETARCH TARGETVARIANT CACHE_ID=alpine3.23
+
 ARG ALPINE_MIRROR=""
 
 RUN test -n "$ALPINE_MIRROR" && sed -i "s#https\?://dl-cdn.alpinelinux.org/alpine#${ALPINE_MIRROR}#g" /etc/apk/repositories
 
-COPY --chmod=500 scripts /usr/local/sbin/
+RUN --mount=type=cache,target=/var/cache/apk,sharing=locked,id=apt-lists-${CACHE_ID}-${TARGETARCH}${TARGETVARIANT} \
+    apk update
+
+RUN --mount=type=cache,target=/var/cache/apk,sharing=locked,id=apt-lists-${CACHE_ID}-${TARGETARCH}${TARGETVARIANT} \
+    apk add bash crane
+
+COPY --chmod=500 \
+    scripts/entrypoint.sh \
+    scripts/init-volume.sh \
+    /usr/local/sbin/
 
 ENTRYPOINT [ "entrypoint.sh" ]
 
-# RUN --mount=type=cache,target=/var/cache/apk,sharing=private \
-#     apk update
 
-# RUN --mount=type=cache,target=/var/cache/apk,sharing=private \
-#     apk add libcap-utils

@@ -1,6 +1,6 @@
 # vesselbox
 
-Containerized VPS-like environments.
+Lightweight, containerized VPS-like environments.
 
 The idea is to run docker images where users or developers connects to the running
 container using ssh and can use like if it were a remote server, keeping installed
@@ -70,17 +70,46 @@ You can see the example on the `compose/` directory. Each environment is compose
 
        docker compose up -d
 
+### Using docker
+
+Using docker requires more commands:
+
+1. Create a volume
+
+        docker volume create the-volume
+
+2. Initialize the volume, will ask you for the new root password
+
+        docker run --rm -it --name test \
+            --stop-signal SIGRTMIN+3 \
+            -e container=docker \
+            --cap-add sys_admin \
+            -v the-volume:/data \
+            -v ./dist/debian13.3.tar:/base.tar \
+            --entrypoint init-volume.sh \
+            vesselbox/vesselbox
+
+3. Run it
+
+        docker run --rm -it --name test \
+            --stop-signal SIGRTMIN+3 \
+            -e container=docker \
+            --cap-add sys_admin \
+            -v the-volume:/data \
+            vesselbox/vesselbox
 
 ## Roadmap
 
 - [ ] Add debian environments (13.3 done, do 12 too)
 - [ ] Add alma/rocky environments
 - [ ] Helm chart / raw manifests
+- [ ] Use OCI artifacts and registries for environment base image
 
 ## TODO
 
-- [ ] Write Initial Roadmap
-- [ ] Write initial TODO
 - [ ] The ssh host keys should be created for each environment on the init-volume, but decide which
 strategy would be best for all the different environments, maybe config or file locations differ.
 - [ ] Is an alpine environment usefull? (but it doesn't use systemd)
+- [ ] Create vesselbox script
+- [ ] Save the environment images as docker images instead of just the filesystem.
+- [ ] Use `crane export - - < ../image.tar | tar x` for extracting a local image
