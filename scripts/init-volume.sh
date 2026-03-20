@@ -114,7 +114,7 @@ VOLUME_HAS_DATA=$(find $VOLUME_DIR -maxdepth 0 ! -empty)
 esac
 
 echo "Extracting data..."
-tar -xC $VOLUME_DIR -f $TAR_FILE
+crane export - - < $TAR_FILE | tar -xC $VOLUME_DIR
 echo "Extracting data... Done"
 
 config_ssh

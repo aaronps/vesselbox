@@ -7,6 +7,7 @@ networks:
         - subnet: 10.0.0.0/24
 
 volumes:
+  debian128:
   debian133:
   ubuntu2204:
   ubuntu2404:
@@ -27,7 +28,7 @@ services:
         source: ubuntu2204
         target: /data
       - type: bind
-        source: ../dist/ubuntu22.04.tar
+        source: ../dist/ubuntu22.04.docker.tar
         target: /base.tar
         read_only: true
         bind:
@@ -65,7 +66,7 @@ services:
         source: ubuntu2404
         target: /data
       - type: bind
-        source: ../dist/ubuntu24.04.tar
+        source: ../dist/ubuntu24.04.docker.tar
         target: /base.tar
         read_only: true
         bind:
@@ -103,7 +104,7 @@ services:
         source: debian133
         target: /data
       - type: bind
-        source: ../dist/debian13.3.tar
+        source: ../dist/debian13.3.docker.tar
         target: /base.tar
         read_only: true
         bind:
@@ -120,10 +121,48 @@ services:
     #   - disabled
 
     ports:
-      - 10024:22
+      - 20024:22
 
     volumes:
       - type: volume
         source: debian133
+        target: /data
+        
+  init-debian128:
+    hostname: debian128
+    image: vesselbox/vesselbox
+
+    profiles:
+      - job
+
+    entrypoint: init-volume.sh
+
+    volumes:
+      - type: volume
+        source: debian128
+        target: /data
+      - type: bind
+        source: ../dist/debian12.8.docker.tar
+        target: /base.tar
+        read_only: true
+        bind:
+          create_host_path: false
+
+  debian128:
+    hostname: debian128
+    image: vesselbox/vesselbox
+
+    cap_add:
+      - SYS_ADMIN
+
+    # profiles:
+    #   - disabled
+
+    ports:
+      - 20025:22
+
+    volumes:
+      - type: volume
+        source: debian128
         target: /data
         

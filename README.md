@@ -38,7 +38,8 @@ Basic command:
 
     docker buildx build \
         --builder=custom \
-        --output type=tar,dest=dist/ubuntu24.04.tar \
+        --output type=docker,dest=dist/ubuntu24.04.docker.tar,compression=gzip \
+        -t vesselbox/ubuntu:24.04 \
         --progress=plain \
         docker/ubuntu24.04
 
@@ -85,7 +86,7 @@ Using docker requires more commands:
             -e container=docker \
             --cap-add sys_admin \
             -v the-volume:/data \
-            -v ./dist/debian13.3.tar:/base.tar \
+            -v ./dist/debian13.3.docker.tar:/base.tar \
             --entrypoint init-volume.sh \
             vesselbox/vesselbox
 
@@ -100,7 +101,7 @@ Using docker requires more commands:
 
 ## Roadmap
 
-- [ ] Add debian environments (13.3 done, do 12 too)
+- [x] Add debian environments (13.3 and 12.8)
 - [ ] Add alma/rocky environments
 - [ ] Helm chart / raw manifests
 - [ ] Use OCI artifacts and registries for environment base image
@@ -111,5 +112,5 @@ Using docker requires more commands:
 strategy would be best for all the different environments, maybe config or file locations differ.
 - [ ] Is an alpine environment usefull? (but it doesn't use systemd)
 - [ ] Create vesselbox script
-- [ ] Save the environment images as docker images instead of just the filesystem.
-- [ ] Use `crane export - - < ../image.tar | tar x` for extracting a local image
+- [x] Save the environment images as docker images instead of just the root filesystem.
+- [x] Use `crane export - - < ../image.tar | tar x` for extracting a local image
