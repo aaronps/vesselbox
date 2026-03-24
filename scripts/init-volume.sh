@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 # Copyright 2026 Aaron Perez Sanchez <aaronperezsanchez@hotmail.com>
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,8 +16,10 @@
 set -e
 
 VOLUME_DIR=/data
-TAR_FILE=/base.tar
 REINIT_OP=
+SRC_REGISTRY_INSECURE=
+SRC_TYPE=
+SRC=
 
 while [ $# -ge 1 ]; do case $1 in
 
@@ -42,9 +44,74 @@ while [ $# -ge 1 ]; do case $1 in
         shift 2
         ;;
 
-    --help)
-        echo "wants help"
+    --insecure)
+        SRC_REGISTRY_INSECURE=--insecure
         shift
+        ;;
+
+    --registry=*)
+        SRC_TYPE=registry
+        SRC="${1#*=}"
+        shift
+        ;;
+
+    --registry)
+        [ $# -lt 2 ] && { echo "--registry requires argument"; exit 1; }
+        SRC_TYPE=registry
+        SRC=$2
+        shift 2
+        ;;
+
+    --image=*)
+        SRC_TYPE=imagefile
+        SRC="${1#*=}"
+        shift
+        ;;
+
+    --image)
+        [ $# -lt 2 ] && { echo "--image requires argument"; exit 1; }
+        SRC_TYPE=imagefile
+        SRC=$2
+        shift 2
+        ;;
+    
+    --rootfs=*)
+        SRC_TYPE=rootfs
+        SRC="${1#*=}"
+        shift
+        ;;
+
+    --rootfs)
+        [ $# -lt 2 ] && { echo "--rootfs requires argument"; exit 1; }
+        SRC_TYPE=rootfs
+        SRC=$2
+        shift 2
+        ;;
+
+    --help)
+        echo "Usage: $(basename $0) [OPTIONS]"
+        echo ""
+        echo "Initialize a volume with a root filesystem from various sources."
+        echo ""
+        echo "Options:"
+        echo "  --reinit              Delete existing volume data before extracting"
+        echo "  --overwrite           Extract over existing volume data (may cause issues)"
+        echo "  --volume=PATH         Volume mount point (default: /data)"
+        echo "  --volume PATH         Volume mount point (alternative form)"
+        echo "  --insecure            Allow insecure registry connections"
+        echo "  --registry=URL        Pull and extract image from a container registry"
+        echo "  --registry URL        Pull and extract image from a registry (alternative form)"
+        echo "  --image=PATH          Extract from a local container image file"
+        echo "  --image PATH          Extract from a local image file (alternative form)"
+        echo "  --rootfs=PATH         Extract from a rootfs tarball"
+        echo "  --rootfs PATH         Extract from a rootfs tarball (alternative form)"
+        echo "  --help                Show this help message"
+        echo ""
+        echo "Examples:"
+        echo "  $(basename $0) --volume=/mnt/data --registry=myregistry.com/myimage:latest"
+        echo "  $(basename $0) --volume=/data --rootfs=/path/to/rootfs.tar.gz --reinit"
+        echo "  $(basename $0) --image=/path/to/image.tar --overwrite"
+        exit 0
         ;;
 
     *)
@@ -114,7 +181,19 @@ VOLUME_HAS_DATA=$(find $VOLUME_DIR -maxdepth 0 ! -empty)
 esac
 
 echo "Extracting data..."
-crane export - - < $TAR_FILE | tar -xC $VOLUME_DIR
+
+case $SRC_TYPE in
+    registry)
+        crane export $SRC_REGISTRY_INSECURE $SRC - | tar -xC $VOLUME_DIR
+        ;;
+    image)
+        crane export - - < $SRC | tar -xC $VOLUME_DIR
+        ;;
+    rootfs)
+        tar -xC $VOLUME_DIR -f $SRC
+        ;;
+esac
+
 echo "Extracting data... Done"
 
 config_ssh
