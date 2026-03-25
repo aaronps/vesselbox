@@ -14,29 +14,20 @@
 
 ARG REGISTRY="docker.io"
 
-FROM $REGISTRY/rockylinux/rockylinux:9.7
+FROM $REGISTRY/library/almalinux:10.1
 
-ARG TARGETARCH TARGETVARIANT CACHE_ID=rockylinux9.7
+ARG TARGETARCH TARGETVARIANT CACHE_ID=almalinux10.1
 
-ARG ROCKY_MIRROR TZ=UTC LANG=C.UTF8
-
-RUN test -n "$ROCKY_MIRROR" \
- && sed -e "s|^mirrorlist=|#mirrorlist=|g" \
-        -e "s|^#baseurl=http://dl.rockylinux.org/\$contentdir|baseurl=$ROCKY_MIRROR|g" \
-        -i \
-        /etc/yum.repos.d/rocky*.repo
+ARG TZ=UTC LANG=C.UTF8
 
 ENV TZ=$TZ \
     LANG=$LANG
-
-# when installing packages, also install documentation, like real server
-RUN sed -i 's/tsflags=nodocs/#tsflags=nodocs/' /etc/dnf/dnf.conf
 
 RUN --mount=type=cache,target=/var/cache/dnf,sharing=locked,id=dnf-cache-${CACHE_ID}-${TARGETARCH}${TARGETVARIANT} \
     dnf -y --setopt=keepcache=1 update
 
 RUN --mount=type=cache,target=/var/cache/dnf,sharing=locked,id=dnf-cache-${CACHE_ID}-${TARGETARCH}${TARGETVARIANT} \
-    dnf -y --setopt=keepcache=1 install systemd openssh-server openssh-clients
+    dnf -y --setopt=keepcache=1 install openssh-server openssh-clients
 
 RUN systemctl set-default multi-user.target \
  && systemctl mask `systemctl list-unit-files '*mount' | awk '/mount/{print $1}'`

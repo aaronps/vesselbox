@@ -32,7 +32,7 @@ environments. This is a basic example, you may want to read official documentati
 
 ### 3. Create the environment image
 
-On this example, the result is saved on `dist/ubuntu24.04.tar` (uncompressed)
+On this example, the result is saved on `dist/ubuntu24.04.docker.tar` (layers are gzip compressed)
 
 Basic command:
 
@@ -57,21 +57,35 @@ Example with extra arguments:
         --build-arg UBUNTU_MIRROR=my.ubuntu.mirror \
         --build-arg TZ=GMT
 
+Example with registry and rootfs outputs, you can mix any kind of outputs:
+
+    docker buildx build ... \
+        --output type=registry,registry.insecure=true,name=host.docker.internal:5000/vesselbox/ubuntu:24.04,compression=gzip \
+        --output type=tar,dest=dist/ubuntu24.04.rootfs.tar
+
 ## Use
 
 ### Using docker compose
 
-You can see the example on the `compose/` directory. Each environment is composed of 3 parts: a volume, an initialization job and a running service.
+You can see the example on `compose.yaml` file, it uses a internal registry.
 
-1. Initialize the volume, the command will ask you to set the new root password.
+1. When using the internal registry, start it
 
-       docker compose run --rm -it init-ubuntu2404
+       docker compose up -d registry
 
-2. Start the service
+2. Initialize the volume, will ask to set the new root password.
+
+       docker compose run --rm --entrypoint init-volume.sh debian133
+
+3. Start the service or run directly, note that when running directly the port may not be exposed, use only for tests.
 
        docker compose up -d
 
-### Using docker
+       docker compose run --rm debian133
+
+4. You can stop the container within itself using `halt`, `reboot` and `shutdown`
+
+### Using docker (NEEDS REVIEW)
 
 Using docker requires more commands:
 
@@ -102,15 +116,25 @@ Using docker requires more commands:
 ## Roadmap
 
 - [x] Add debian environments (13.3 and 12.8)
-- [ ] Add alma/rocky environments
+- [x] Add alma/rocky environments
 - [ ] Helm chart / raw manifests
-- [ ] Use OCI artifacts and registries for environment base image
+- [x] Use OCI artifacts and registries for environment base image
 
 ## TODO
 
-- [ ] The ssh host keys should be created for each environment on the init-volume, but decide which
-strategy would be best for all the different environments, maybe config or file locations differ.
-- [ ] Is an alpine environment usefull? (but it doesn't use systemd)
+- [ ] Need to rewrite the procedure for running standalone docker containers (without compose)
+- [ ] Consider /dev/kmsg and `kernel.dmesg_restrict = 0`
+- [ ] almalinux not working properly
+- [ ] The ssh host keys should be created in each environment when they start. Some images already does this step, need to check:
+    - [x] debian 12.8
+    - [x] debian 13.3
+    - [x] ubuntu 22.04
+    - [x] ubuntu 24.04
+    - [x] rockylinux 9.7
+    - [x] rockylinux 10.1
+    - [ ] almalinux 10.1
+- [ ] Is an alpine environment useful? (it doesn't use systemd)
 - [ ] Create vesselbox script
+- [x] Review which apt based images needs something like "RUN rm -f /etc/apt/apt.conf.d/docker-clean"
 - [x] Save the environment images as docker images instead of just the root filesystem.
 - [x] Use `crane export - - < ../image.tar | tar x` for extracting a local image

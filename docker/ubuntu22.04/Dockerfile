@@ -25,19 +25,39 @@ RUN test -n "$UBUNTU_MIRROR" && sed -Ei "s,(archive|security|ports)\.ubuntu\.com
 ENV TZ=$TZ \
     LANG=$LANG
 
+# As this instance is intended to be a complete system, and we use build cache for apt, remove the docker optimizations
+RUN rm /etc/apt/apt.conf.d/docker-*
+
 RUN --mount=type=cache,target=/var/lib/apt/lists,sharing=locked,id=apt-lists-${CACHE_ID}-${TARGETARCH}${TARGETVARIANT} \
     --mount=type=cache,target=/var/cache/apt,sharing=locked,id=apt-cache-${CACHE_ID}-${TARGETARCH}${TARGETVARIANT} \
-    apt -y update \
- && apt -y upgrade \
+    apt-get update \
+ && DEBIAN_FRONTEND=noninteractive apt-get -y upgrade \
  && echo y | unminimize
 
 RUN --mount=type=cache,target=/var/lib/apt/lists,sharing=locked,id=apt-lists-${CACHE_ID}-${TARGETARCH}${TARGETVARIANT} \
     --mount=type=cache,target=/var/cache/apt,sharing=locked,id=apt-cache-${CACHE_ID}-${TARGETARCH}${TARGETVARIANT} \
-    DEBIAN_FRONTEND=noninteractive apt install -y --no-install-recommends systemd dbus 
-    
+    apt-get update \
+ && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends systemd systemd-sysv dbus openssh-server \
+ && rm -f /etc/ssh/ssh_host_*
+
+# as ubuntu 22.04 doesn't have sshd-keygen.service unit, we take this from debian 13, modified to run when needed.
+COPY <<EOF /etc/systemd/system/sshd-keygen.service
+[Unit]
+Description=Generate sshd host keys on first boot
+ConditionPathIsReadWrite=/etc/ssh
+ConditionPathIsSymbolicLink=!/etc/ssh
+ConditionPathExists=!/etc/ssh/ssh_host_rsa_key
+Before=ssh.service sshd.service sshd@.service
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=ssh-keygen -A
+
+[Install]
+WantedBy=ssh.service sshd.service sshd@.service ssh.socket
+EOF
+
 RUN systemctl set-default multi-user.target \
-    && systemctl mask `systemctl list-unit-files '*mount' | awk '/mount/{print $1}'`
-    
-RUN --mount=type=cache,target=/var/lib/apt/lists,sharing=locked,id=apt-lists-${CACHE_ID}-${TARGETARCH}${TARGETVARIANT} \
-    --mount=type=cache,target=/var/cache/apt,sharing=locked,id=apt-cache-${CACHE_ID}-${TARGETARCH}${TARGETVARIANT} \
-    DEBIAN_FRONTEND=noninteractive apt install -y --no-install-recommends openssh-server
+ && systemctl mask `systemctl list-unit-files '*mount' | awk '/mount/{print $1}'` \
+ && systemctl enable sshd-keygen

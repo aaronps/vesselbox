@@ -14,6 +14,7 @@
 # limitations under the License.
 
 VOLUME_DIR=/data
+RUN_COMMAND=/usr/sbin/init
 
 pre_checks() {
     test -e "$VOLUME_DIR" || { echo "Volume $VOLUME_DIR does not exists"; exit 1; }
@@ -51,4 +52,4 @@ pre_checks
 
 prepare_volume
 
-do_chroot /usr/lib/systemd/systemd
+do_chroot "${RUN_COMMAND}"

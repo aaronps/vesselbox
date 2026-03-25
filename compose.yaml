@@ -10,7 +10,9 @@ volumes:
   debian133:
   ubuntu2204:
   ubuntu2404:
+  rockylinux97:
   rockylinux101:
+  almalinux101:
 
 services:
 
@@ -28,26 +30,6 @@ services:
     logging:
       driver: local
 
-  init-ubuntu2204:
-    hostname: ubuntu2204
-    image: vesselbox/vesselbox
-
-    profiles:
-      - job
-
-    entrypoint: init-volume.sh
-
-    volumes:
-      - type: volume
-        source: ubuntu2204
-        target: /data
-      - type: bind
-        source: ../dist/ubuntu22.04.docker.tar
-        target: /base.tar
-        read_only: true
-        bind:
-          create_host_path: false
-
   ubuntu2204:
     hostname: ubuntu2204
     image: vesselbox/vesselbox
@@ -55,8 +37,13 @@ services:
     cap_add:
       - SYS_ADMIN
 
-    # profiles:
-    #   - disabled
+    profiles:
+      - disabled
+
+    environment:
+      - SRC_REGISTRY_INSECURE=--insecure
+      - SRC_TYPE=registry
+      - SRC=registry:5000/vesselbox/ubuntu:22.04
 
     ports:
       - 20023:22
@@ -65,26 +52,6 @@ services:
       - type: volume
         source: ubuntu2204
         target: /data
-        
-  init-ubuntu2404:
-    hostname: ubuntu2404
-    image: vesselbox/vesselbox
-
-    profiles:
-      - job
-
-    entrypoint: init-volume.sh
-
-    volumes:
-      - type: volume
-        source: ubuntu2404
-        target: /data
-      - type: bind
-        source: ../dist/ubuntu24.04.docker.tar
-        target: /base.tar
-        read_only: true
-        bind:
-          create_host_path: false
 
   ubuntu2404:
     hostname: ubuntu2404
@@ -96,6 +63,11 @@ services:
     profiles:
       - disabled
 
+    environment:
+      - SRC_REGISTRY_INSECURE=--insecure
+      - SRC_TYPE=registry
+      - SRC=registry:5000/vesselbox/ubuntu:24.04
+
     ports:
       - 20022:22
 
@@ -103,26 +75,6 @@ services:
       - type: volume
         source: ubuntu2404
         target: /data
-        
-  init-debian133:
-    hostname: debian133
-    image: vesselbox/vesselbox
-
-    profiles:
-      - job
-
-    entrypoint: init-volume.sh
-
-    volumes:
-      - type: volume
-        source: debian133
-        target: /data
-      - type: bind
-        source: ../dist/debian13.3.docker.tar
-        target: /base.tar
-        read_only: true
-        bind:
-          create_host_path: false
 
   debian133:
     hostname: debian133
@@ -134,6 +86,11 @@ services:
     # profiles:
     #   - disabled
 
+    environment:
+      - SRC_REGISTRY_INSECURE=--insecure
+      - SRC_TYPE=registry
+      - SRC=registry:5000/vesselbox/debian:13.3
+
     ports:
       - 20024:22
 
@@ -141,26 +98,6 @@ services:
       - type: volume
         source: debian133
         target: /data
-        
-  init-debian128:
-    hostname: debian128
-    image: vesselbox/vesselbox
-
-    profiles:
-      - job
-
-    entrypoint: init-volume.sh
-
-    volumes:
-      - type: volume
-        source: debian128
-        target: /data
-      - type: bind
-        source: ../dist/debian12.8.docker.tar
-        target: /base.tar
-        read_only: true
-        bind:
-          create_host_path: false
 
   debian128:
     hostname: debian128
@@ -172,6 +109,11 @@ services:
     # profiles:
     #   - disabled
 
+    environment:
+      - SRC_REGISTRY_INSECURE=--insecure
+      - SRC_TYPE=registry
+      - SRC=registry:5000/vesselbox/debian:12.8
+
     ports:
       - 20025:22
 
@@ -180,19 +122,65 @@ services:
         source: debian128
         target: /data
         
-  rockylinux101:
-    hostname: rockylinux101
+  rockylinux97:
+    hostname: rockylinux97
     image: vesselbox/vesselbox
 
     cap_add:
       - SYS_ADMIN
+
+    environment:
+      - SRC_REGISTRY_INSECURE=--insecure
+      - SRC_TYPE=registry
+      - SRC=registry:5000/vesselbox/rockylinux:9.7
     
     ports:
       - 20026:22
 
     volumes:
       - type: volume
+        source: rockylinux97
+        target: /data
+
+  rockylinux101:
+    hostname: rockylinux101
+    image: vesselbox/vesselbox
+
+    cap_add:
+      - SYS_ADMIN
+
+    environment:
+      - SRC_REGISTRY_INSECURE=--insecure
+      - SRC_TYPE=registry
+      - SRC=registry:5000/vesselbox/rockylinux:10.1
+    
+    ports:
+      - 20027:22
+
+    volumes:
+      - type: volume
         source: rockylinux101
         target: /data
 
-        
+  almalinux101:
+    hostname: almalinux101
+    image: vesselbox/vesselbox
+
+    cap_add:
+      - SYS_ADMIN
+
+    environment:
+      - SRC_REGISTRY_INSECURE=--insecure
+      - SRC_TYPE=registry
+      - SRC=registry:5000/vesselbox/almalinux:10.1
+
+    # environment:
+    #   - container=docker
+
+    ports:
+      - 20028:22
+
+    volumes:
+      - type: volume
+        source: almalinux101
+        target: /data

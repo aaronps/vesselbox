@@ -15,11 +15,8 @@
 
 set -e
 
-VOLUME_DIR=/data
+VOLUME_DIR="${VOLUME_DIRT:-/data}"
 REINIT_OP=
-SRC_REGISTRY_INSECURE=
-SRC_TYPE=
-SRC=
 
 while [ $# -ge 1 ]; do case $1 in
 
@@ -125,6 +122,16 @@ pre_checks() {
     test -z "$VOLUME_DIR" && { echo "volume dir cannot be empty"; exit 1; }
     test -e "$VOLUME_DIR" || { echo "Volume $VOLUME_DIR does not exists"; exit 1; }
     test -d "$VOLUME_DIR" || { echo "Volume $VOLUME_DIR is not a directory"; exit 1; }
+    
+    test -n "$SRC" || { echo "Source not set (SRC)"; exit 1; }
+    case "$SRC_TYPE" in
+        registry|imagefile|rootfs)
+            ;;
+        *)
+            echo "Source type not set or invalid: registry, imagefile or rootfs"
+            exit 1
+            ;;
+    esac
 }
 
 config_ssh() {

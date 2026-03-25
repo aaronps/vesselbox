@@ -19,7 +19,6 @@ FROM $REGISTRY/rockylinux/rockylinux:10.1
 ARG TARGETARCH TARGETVARIANT CACHE_ID=rockylinux10.1
 
 ARG ROCKY_MIRROR TZ=UTC LANG=C.UTF8
-# export ROCKY_MIRROR=https://mirror.nju.edu.cn/rocky
 
 RUN test -n "$ROCKY_MIRROR" \
  && sed -e "s|^mirrorlist=|#mirrorlist=|g" \
@@ -37,10 +36,9 @@ RUN --mount=type=cache,target=/var/cache/dnf,sharing=locked,id=dnf-cache-${CACHE
     dnf -y --setopt=keepcache=1 update
 
 RUN --mount=type=cache,target=/var/cache/dnf,sharing=locked,id=dnf-cache-${CACHE_ID}-${TARGETARCH}${TARGETVARIANT} \
-    dnf -y --setopt=keepcache=1 install systemd
+    dnf -y --setopt=keepcache=1 install systemd openssh-server openssh-clients
 
+# without chmod 400 /etc/shadow systemd --user fails for root
 RUN systemctl set-default multi-user.target \
- && systemctl mask `systemctl list-unit-files '*mount' | awk '/mount/{print $1}'`
-
-RUN --mount=type=cache,target=/var/cache/dnf,sharing=locked,id=dnf-cache-${CACHE_ID}-${TARGETARCH}${TARGETVARIANT} \
-    dnf -y --setopt=keepcache=1 install openssh-server openssh-clients
+ && systemctl mask `systemctl list-unit-files '*mount' | awk '/mount/{print $1}'` \
+ && chmod 400 /etc/shadow
