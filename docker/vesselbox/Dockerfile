@@ -23,10 +23,9 @@ ARG ALPINE_MIRROR=""
 RUN test -n "$ALPINE_MIRROR" && sed -i "s#https\?://dl-cdn.alpinelinux.org/alpine#${ALPINE_MIRROR}#g" /etc/apk/repositories
 
 RUN --mount=type=cache,target=/var/cache/apk,sharing=locked,id=apt-lists-${CACHE_ID}-${TARGETARCH}${TARGETVARIANT} \
-    apk update
+    apk update \
+ && apk add bash crane setpriv
 
-RUN --mount=type=cache,target=/var/cache/apk,sharing=locked,id=apt-lists-${CACHE_ID}-${TARGETARCH}${TARGETVARIANT} \
-    apk add bash crane
 
 COPY --chmod=500 \
     scripts/entrypoint.sh \

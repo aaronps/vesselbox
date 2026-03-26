@@ -60,14 +60,14 @@ while [ $# -ge 1 ]; do case $1 in
         ;;
 
     --image=*)
-        SRC_TYPE=imagefile
+        SRC_TYPE=image
         SRC="${1#*=}"
         shift
         ;;
 
     --image)
         [ $# -lt 2 ] && { echo "--image requires argument"; exit 1; }
-        SRC_TYPE=imagefile
+        SRC_TYPE=image
         SRC=$2
         shift 2
         ;;
@@ -125,10 +125,10 @@ pre_checks() {
     
     test -n "$SRC" || { echo "Source not set (SRC)"; exit 1; }
     case "$SRC_TYPE" in
-        registry|imagefile|rootfs)
+        registry|image|rootfs)
             ;;
         *)
-            echo "Source type not set or invalid: registry, imagefile or rootfs"
+            echo "Source type not set or invalid: registry, image or rootfs"
             exit 1
             ;;
     esac

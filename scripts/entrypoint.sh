@@ -44,6 +44,7 @@ do_chroot() {
         --securebits=+noroot \
         --inh-caps=+chown,+dac_override,+fowner,+fsetid,+kill,+setgid,+setuid,+setpcap,+net_bind_service,+net_raw,+audit_write \
         --ambient-caps=+chown,+dac_override,+fowner,+fsetid,+kill,+setgid,+setuid,+setpcap,+net_bind_service,+net_raw,+audit_write \
+        --bounding-set=-sys_admin \
         -- \
         "$@"
 }

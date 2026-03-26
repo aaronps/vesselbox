@@ -6,6 +6,7 @@ networks:
 
 volumes:
   registry:
+  dev:
   debian128:
   debian133:
   ubuntu2204:
@@ -30,6 +31,47 @@ services:
     logging:
       driver: local
 
+  dev:
+    hostname: dev
+    image: vesselbox/vesselbox
+
+    cap_add:
+      - SYS_ADMIN
+
+    profiles:
+      - disabled
+
+    environment:
+      - SRC_TYPE=image
+      # - SRC=/images/ubuntu22.04.docker.tar
+      - SRC=/images/ubuntu24.04.docker.tar
+
+    ports:
+      - 20021:22
+
+    volumes:
+      - type: volume
+        source: dev
+        target: /data
+      - type: bind
+        source: ./scripts/entrypoint.sh
+        target: /usr/local/sbin/entrypoint.sh
+        read_only: true
+        bind:
+          create_host_path: false
+      - type: bind
+        source: ./scripts/init-volume.sh
+        target: /usr/local/sbin/init-volume.sh
+        read_only: true
+        bind:
+          create_host_path: false
+      - type: bind
+        source: ./dist
+        target: /images
+        read_only: true
+        bind:
+          create_host_path: false
+
   ubuntu2204:
     hostname: ubuntu2204
     image: vesselbox/vesselbox
@@ -46,7 +88,7 @@ services:
       - SRC=registry:5000/vesselbox/ubuntu:22.04
 
     ports:
-      - 20023:22
+      - 20022:22
 
     volumes:
       - type: volume
@@ -69,7 +111,7 @@ services:
       - SRC=registry:5000/vesselbox/ubuntu:24.04
 
     ports:
-      - 20022:22
+      - 20023:22
 
     volumes:
       - type: volume

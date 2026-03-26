@@ -115,15 +115,16 @@ Using docker requires more commands:
 
 ## Roadmap
 
+- [ ] Helm chart / raw manifests
 - [x] Add debian environments (13.3 and 12.8)
 - [x] Add alma/rocky environments
-- [ ] Helm chart / raw manifests
 - [x] Use OCI artifacts and registries for environment base image
 
 ## TODO
 
 - [ ] Need to rewrite the procedure for running standalone docker containers (without compose)
-- [ ] Consider /dev/kmsg and `kernel.dmesg_restrict = 0`
+- [x] Consider /proc/kmsg and `kernel.dmesg_restrict = 0`
+    - [ ] Write doc about `kernel.dmesg_restrict=1`, and wsl.
 - [ ] almalinux not working properly
 - [ ] The ssh host keys should be created in each environment when they start. Some images already does this step, need to check:
     - [x] debian 12.8
