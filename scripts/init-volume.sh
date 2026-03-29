@@ -15,7 +15,7 @@
 
 set -e
 
-VOLUME_DIR="${VOLUME_DIRT:-/data}"
+VOLUME_DIR="${VOLUME_DIR:-/data}"
 REINIT_OP=
 
 while [ $# -ge 1 ]; do case $1 in
@@ -141,21 +141,32 @@ config_ssh() {
 }
 
 setup_root_password() {
+    if [ -n "$ROOT_PASSWORD" ]; then
+        echo "Setting root password from environment variable"
+        echo "root:$ROOT_PASSWORD" | chpasswd -R $VOLUME_DIR || { echo "Root password update failed"; exit 1; }
+        return
+    fi
+    
     echo "Setting root password"
     
-    PASS1=""
-    PASS2=""
+    while true; do
+        PASS1=""
+        PASS2=""
 
-    while [ -z "$PASS1" ]; do
-        read -s -p "Enter root password: " PASS1
-        echo ""
-        test -n "$PASS1" || echo "Password cannot be empty"
-    done
+        while [ -z "$PASS1" ]; do
+            read -s -p "Enter root password: " PASS1
+            echo ""
+            test -n "$PASS1" || echo "Password cannot be empty"
+        done
 
-    while [ "$PASS1" != "$PASS2" ]; do
-        read -s -p "Verify root password: " PASS2
-        echo ""
-        test "$PASS1" == "$PASS2" || echo "Passwords are different, retry"
+        while [ -z "$PASS2" ]; do
+            read -s -p "Verify root password: " PASS2
+            echo ""
+            test -n "$PASS2" || echo "Password cannot be empty"
+        done
+
+        [ "$PASS1" = "$PASS2" ] && break
+        echo "Passwords do not match, try again"
     done
 
     echo "root:$PASS1" | chpasswd -R $VOLUME_DIR || { echo "Root password update failed"; exit 1; }
