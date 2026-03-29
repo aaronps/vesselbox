@@ -37,7 +37,7 @@ RUN --mount=type=cache,target=/var/lib/apt/lists,sharing=locked,id=apt-lists-${C
 RUN --mount=type=cache,target=/var/lib/apt/lists,sharing=locked,id=apt-lists-${CACHE_ID}-${TARGETARCH}${TARGETVARIANT} \
     --mount=type=cache,target=/var/cache/apt,sharing=locked,id=apt-cache-${CACHE_ID}-${TARGETARCH}${TARGETVARIANT} \
     apt-get update \
- && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends systemd systemd-sysv dbus openssh-server \
+ && DEBIAN_FRONTEND=noninteractive apt-get install -y systemd systemd-sysv dbus openssh-server less \
  && rm -f /etc/ssh/ssh_host_*
 
 # as ubuntu 22.04 doesn't have sshd-keygen.service unit, we take this from debian 13, modified to run when needed.
@@ -59,5 +59,5 @@ WantedBy=ssh.service sshd.service sshd@.service ssh.socket
 EOF
 
 RUN systemctl set-default multi-user.target \
- && systemctl mask `systemctl list-unit-files '*mount' | awk '/mount/{print $1}'` \
+ && systemctl mask systemd-resolved.service $(systemctl list-unit-files | awk '/\.mount|.automount|systemd-tmpfiles-setup/{print $1}') \
  && systemctl enable sshd-keygen
