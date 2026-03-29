@@ -14,7 +14,7 @@
 # limitations under the License.
 
 VOLUME_DIR=/data
-RUN_COMMAND=/usr/sbin/init
+RUN_COMMAND="${@:-/usr/sbin/init}"
 
 pre_checks() {
     test -e "$VOLUME_DIR" || { echo "Volume $VOLUME_DIR does not exists"; exit 1; }
@@ -25,8 +25,12 @@ prepare_volume() {
     cp /etc/hostname $VOLUME_DIR/etc/hostname
     cp /etc/resolv.conf $VOLUME_DIR/etc/resolv.conf
 
-    mount --make-shared $VOLUME_DIR
-    mount -t tmpfs tmpfs $VOLUME_DIR/tmp
+    # "shared" will be needed when we use DinD as a sibling container.
+    # mount --make-shared $VOLUME_DIR
+
+    # tmpfs mount on /tmp is acutally not needed, may make this configurable on the future.
+    # mount -t tmpfs tmpfs $VOLUME_DIR/tmp
+
     mount -t tmpfs tmpfs $VOLUME_DIR/run
     mkdir $VOLUME_DIR/run/lock
     mount -t tmpfs tmpfs $VOLUME_DIR/run/lock
@@ -35,22 +39,26 @@ prepare_volume() {
     mount -o remount,rw /sys/fs/cgroup
     mount --bind /sys/fs/cgroup $VOLUME_DIR/sys/fs/cgroup
     mount --rbind /dev $VOLUME_DIR/dev
+    
+    touch $VOLUME_DIR/run/utmp
 }
 
 do_chroot() {
-    exec chroot $VOLUME_DIR /usr/bin/setpriv \
-        --reuid=0 \
+    exec setpriv --reuid=0 \
         --init-groups \
         --securebits=+noroot \
-        --inh-caps=+chown,+dac_override,+fowner,+fsetid,+kill,+setgid,+setuid,+setpcap,+net_bind_service,+net_raw,+audit_write \
-        --ambient-caps=+chown,+dac_override,+fowner,+fsetid,+kill,+setgid,+setuid,+setpcap,+net_bind_service,+net_raw,+audit_write \
+        --inh-caps=+chown,+dac_override,+fowner,+fsetid,+kill,+setgid,+setuid,+setpcap,+net_bind_service,+net_raw,+audit_write,+sys_chroot \
+        --ambient-caps=+chown,+dac_override,+fowner,+fsetid,+kill,+setgid,+setuid,+setpcap,+net_bind_service,+net_raw,+audit_write,+sys_chroot \
         --bounding-set=-sys_admin \
         -- \
-        "$@"
+        chroot $VOLUME_DIR "$@"
 }
 
 pre_checks
 
 prepare_volume
+
+# it seems env var container=docker is not really needed, we will see.
+# export container
 
 do_chroot "${RUN_COMMAND}"

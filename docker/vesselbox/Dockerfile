@@ -26,7 +26,6 @@ RUN --mount=type=cache,target=/var/cache/apk,sharing=locked,id=apt-lists-${CACHE
     apk update \
  && apk add bash crane setpriv
 
-
 COPY --chmod=500 \
     scripts/entrypoint.sh \
     scripts/init-volume.sh \
