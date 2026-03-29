@@ -19,9 +19,7 @@ separated.
 
 ### 1. Build vesselbox image
 
-    docker buildx build docker/vesselbox \
-        --progress=plain \
-        -t vesselbox/vesselbox:latest
+    docker buildx build . -f docker/vesselbox/Dockerfile -t vesselbox/vesselbox:latest
 
 ### 2. Create a custom builder
 
@@ -77,15 +75,15 @@ You can see the example on `compose.yaml` file, it uses a internal registry.
 
        docker compose run --rm --entrypoint init-volume.sh debian133
 
-3. Start the service or run directly, note that when running directly the port may not be exposed, use only for tests.
+3. Start the service or run directly.
 
-       docker compose up -d
+       docker compose up -d debian133
 
-       docker compose run --rm debian133
+       docker compose run --rm --service-ports debian133
 
 4. You can stop the container within itself using `halt`, `reboot` and `shutdown`
 
-### Using docker (NEEDS REVIEW)
+### Using docker
 
 Using docker requires more commands:
 
@@ -100,9 +98,10 @@ Using docker requires more commands:
             -e container=docker \
             --cap-add sys_admin \
             -v the-volume:/data \
-            -v ./dist/debian13.3.docker.tar:/base.tar \
+            -v ./dist:/images \
             --entrypoint init-volume.sh \
-            vesselbox/vesselbox
+            vesselbox/vesselbox \
+            --image=/images/debian13.3.docker.tar
 
 3. Run it
 
@@ -113,6 +112,14 @@ Using docker requires more commands:
             -v the-volume:/data \
             vesselbox/vesselbox
 
+## Features
+
+- Tested the following image environments:
+    - Debian: 13.3 and 12.8
+    - Ubuntu: 24.04 and 22.04
+    - Rockylinux: 10.1 and 9.7
+- Base image can be a rootfs file, a docker image file or pulled directly from the registry.    
+
 ## Roadmap
 
 - [ ] Helm chart / raw manifests
@@ -122,20 +129,9 @@ Using docker requires more commands:
 
 ## TODO
 
-- [ ] Need to rewrite the procedure for running standalone docker containers (without compose)
+- [ ] almalinux 10.1 doesn't work properly, is work in progress
 - [x] Consider /proc/kmsg and `kernel.dmesg_restrict = 0`
     - [ ] Write doc about `kernel.dmesg_restrict=1`, and wsl.
-- [ ] almalinux not working properly
-- [ ] The ssh host keys should be created in each environment when they start. Some images already does this step, need to check:
-    - [x] debian 12.8
-    - [x] debian 13.3
-    - [x] ubuntu 22.04
-    - [x] ubuntu 24.04
-    - [x] rockylinux 9.7
-    - [x] rockylinux 10.1
-    - [ ] almalinux 10.1
-- [ ] Is an alpine environment useful? (it doesn't use systemd)
+- [ ] Is an alpine environment useful? (it doesn't use systemd, openrc works different)
 - [ ] Create vesselbox script
-- [x] Review which apt based images needs something like "RUN rm -f /etc/apt/apt.conf.d/docker-clean"
-- [x] Save the environment images as docker images instead of just the root filesystem.
-- [x] Use `crane export - - < ../image.tar | tar x` for extracting a local image
+- [ ] Decide what to do with systemd stop signal (SIGRTMIN+3)
