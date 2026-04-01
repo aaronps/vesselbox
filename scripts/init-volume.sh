@@ -190,7 +190,7 @@ VOLUME_HAS_DATA=$(find $VOLUME_DIR -maxdepth 0 ! -empty)
 [[ "$VOLUME_HAS_DATA" ]] && case "$REINIT_OP" in
     clean)
         echo "Deleting old volume data..."
-        find $VOLUME_DIR -mindepth 1 -delete
+        find $VOLUME_DIR -mindepth 1 -maxdepth 1 -print -exec rm -rf {} \;
         echo "Deleting old volume data... Done"
         ;;
     overwrite)

@@ -135,3 +135,4 @@ Using docker requires more commands:
 - [ ] Is an alpine environment useful? (it doesn't use systemd, openrc works different)
 - [ ] Create vesselbox script
 - [ ] Decide what to do with systemd stop signal (SIGRTMIN+3)
+- [ ] Check why Debian 13.3 dbus fails now with `--securebits=+noroot` in entrypoint.sh (before was good)

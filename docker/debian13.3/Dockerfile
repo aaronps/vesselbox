@@ -47,5 +47,11 @@ ConditionFirstBoot=
 ConditionPathExists=!/etc/ssh/ssh_host_rsa_key
 EOF
 
+# Remove CAP_AUDIT_WRITE from dbus, it now fails as we removed this capability.
+COPY <<EOF /etc/systemd/system/dbus.service.d/override.conf
+[Service]
+AmbientCapabilities=
+EOF
+
 RUN systemctl set-default multi-user.target \
  && systemctl mask $(systemctl list-unit-files '*mount' | awk '/mount/{print $1}')
